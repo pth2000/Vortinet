@@ -40,19 +40,15 @@ class SimulationRunner:
         self.controller = DockerController(topology)
 
         try:
-            self.logger.info("")
             self.logger.info("=== 步骤 1: 清理旧的仿真环境 ===")
             self.controller.stop_and_cleanup()
 
-            self.logger.info("")
             self.logger.info("=== 步骤 2: 预配置Docker容器和网络 ===")
             self.controller.provision()
 
-            self.logger.info("")
             self.logger.info("=== 步骤 3: 启动仿真 ===")
             self.controller.start()
 
-            self.logger.info("")
             if auto_cleanup_after > 0:
                 self.logger.info(f"仿真已启动。等待{auto_cleanup_after}秒后自动清理...")
                 time.sleep(auto_cleanup_after)
@@ -62,11 +58,10 @@ class SimulationRunner:
                     time.sleep(1)
 
         except KeyboardInterrupt:
-            self.logger.info("\n接收到手动中断信号...")
+            self.logger.info("接收到手动中断信号...")
         except Exception as e:
             self.logger.error(f"仿真过程中发生错误: {e}", exc_info=True)
         finally:
-            self.logger.info("")
             self.logger.info("=== 步骤 4: 停止并清理仿真环境 ===")
             if self.controller:
                 self.controller.stop_and_cleanup()

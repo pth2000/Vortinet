@@ -132,7 +132,7 @@ class Topology:
         output = []
         output.append("="*20 + " Topology Summary " + "="*20)
 
-        output.append(f"\nNodes ({len(self.nodes)}):")
+        output.append(f"Nodes ({len(self.nodes)}):")
         sorted_nodes = sorted(self.nodes.items())
         for name, node in sorted_nodes:
             output.append(f"  - Node: {name} (Type: {node.node_type}, Image: {node.attributes.get('image', 'N/A')})")
@@ -154,8 +154,82 @@ class Topology:
         return "\n".join(output)
 
     def display(self):
-        """打印拓扑结构的文本表示。"""
-        print(self)
+        """
+        使用 rich 在终端上以“仪表盘”风格进行格式化打印。
+        """
+        from rich.console import Console, Group
+        from rich.panel import Panel
+        from rich.table import Table
+        from rich.tree import Tree
+        from rich.layout import Layout
+        from rich.columns import Columns
+        from rich.box import ROUNDED
+        console = Console(width=120)
+
+        # --- 1. 构建各个组件 (Components) ---
+
+        # 面板 (Panel): 精简信息，作为总览
+        summary_panel = Panel(
+            f"[bold]Nodes:[/] [bold yellow]{len(self.nodes)}[/]\n"
+            f"[bold]Links:[/] [bold yellow]{len(self.links)}[/]",
+            title="[bold #8FBCBB]📊 Topology Summary[/]",
+            border_style="#4C566A",
+            padding=(1, 2)
+        )
+
+        # 节点树 (Tree): 优化图标和颜色
+        node_tree = Tree("💻 [bold #81A1C1]Nodes[/]", guide_style="#616E88")
+        sorted_nodes = sorted(self.nodes.items())
+        for name, node in sorted_nodes:
+            image = node.attributes.get('image', '[dim]N/A[/dim]')
+            node_branch = node_tree.add(
+                f"[#D08770]{name}[/] [dim](Type: {node.node_type}, Image: {image})[/dim]"
+            )
+            for iface_name, iface in sorted(node.interfaces.items()):
+                # 使用 Emoji 🔌 作为图标，兼容性极佳
+                icon = "🔌"
+                if iface.link and iface.ip_address:
+                    ip_info = f"[#A3BE8C]{iface.ip_address}/{iface.link.subnet.prefixlen}[/]"
+                    conn_info = f"-> [bold #88C0D0]{iface.link.name}[/]"
+                    node_branch.add(f"{icon} {iface_name}: {ip_info} {conn_info}")
+                else:
+                    node_branch.add(f"{icon} {iface_name}: [red](Not connected)[/red]")
+
+        # 链接表格 (Table): 优化样式和颜色
+        link_table = Table(
+            title="🔗 [bold #81A1C1]Links[/]",
+            box=ROUNDED,  # 使用圆角边框
+            border_style="#4C566A",
+            header_style="bold #8FBCBB",
+            padding=(0, 1)
+        )
+        link_table.add_column("Link Name", style="#B48EAD")
+        link_table.add_column("Subnet", style="#EBCB8B")
+        link_table.add_column("Connections", style="white")  # 连接信息用白色，避免歧义
+
+        for name, link in sorted(self.links.items()):
+            parts = [f"[#D08770]{iface.node.name}[/]([#A3BE8C]{iface.name}[/])"
+                     for iface in sorted(link.interfaces, key=lambda x: x.node.name)]
+            connected_str = " [dim]<-->[/dim] ".join(parts)
+            link_table.add_row(name, str(link.subnet), connected_str)
+
+        # --- 2. 组合布局 (Layout) ---
+
+        # 将节点树和链接表格放入一个 Columns 对象中，实现并排布局
+        # renderable_map 将组件映射到名称，方便在 Layout 中引用
+        layout = Layout()
+        layout.split(
+            Layout(summary_panel, name="header", size=5),
+            Layout(ratio=1, name="main"),
+        )
+        # 仅当终端宽度足够时才并排，否则垂直排列
+        if console.width > 110:
+            layout["main"].split_row(Layout(node_tree), Layout(link_table))
+        else:
+            layout["main"].split_column(Layout(node_tree), Layout(link_table))
+
+        # --- 3. 打印最终布局 ---
+        console.print(layout)
 
 
 class TopologyFactory:

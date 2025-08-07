@@ -294,8 +294,13 @@ class DockerController:
                 else:
                     self.logger.error(f"  -> 添加默认网关失败 (退出码: {exec_result.exit_code}): {exec_result.output.decode().strip()}")
 
+            # 5. 应用TC规则
+            # 再次遍历接口以应用TC规则
+            for iface_name, interface in sorted_interfaces:
+                if interface.link:
+                    self._apply_tc_rules(container, iface_name, interface.link)
 
-            # 5. 执行启动后命令
+            # 6. 执行启动后命令
             if 'post_start_command' in node.attributes:
                 command = node.attributes['post_start_command']
                 self.logger.info(f"-> 在容器 {container.name} 中执行启动后命令: '{command}'")
@@ -306,6 +311,47 @@ class DockerController:
                     self.logger.info(f"  -> 命令执行成功。")
 
         self.logger.info("仿真启动完成。")
+
+    def _apply_tc_rules(self, container, iface_name: str, link: Link):
+        """在容器的指定接口上应用流量控制规则。"""
+        if not any([link.delay, link.loss, link.bandwidth]):
+            return  # 如果没有设置任何TC参数，则直接返回
+
+        self.logger.info(f"-> 在 {container.name} 的接口 {iface_name} 上应用TC规则...")
+
+        # 基础命令: 添加一个netem qdisc
+        # 我们需要先删除接口上可能存在的任何现有qdisc
+        base_cmd_delete = f"tc qdisc del dev {iface_name} root"
+        container.exec_run(base_cmd_delete) # 忽略错误，因为它可能不存在
+
+        base_cmd_add = f"tc qdisc add dev {iface_name} root netem"
+        tc_options = []
+
+        if link.delay:
+            # 假设延迟格式为 "10ms"
+            tc_options.append(f"delay {link.delay}")
+            self.logger.info(f"  - 设置延迟: {link.delay}")
+
+        if link.loss:
+            # 假设loss为百分比，如 0.1
+            tc_options.append(f"loss {link.loss}%")
+            self.logger.info(f"  - 设置丢包率: {link.loss}%")
+
+        if link.bandwidth:
+            # 带宽限制需要一个不同的qdisc (tbf)，这里我们先用netem的rate
+            # 注意: netem的rate功能不如TBF精确，但对于简单场景足够
+            # 带宽单位是kbit
+            tc_options.append(f"rate {link.bandwidth}kbit")
+            self.logger.info(f"  - 设置带宽: {link.bandwidth}kbit")
+
+        # 组合成最终命令
+        full_command = f"{base_cmd_add} {' '.join(tc_options)}"
+        exec_result = container.exec_run(full_command)
+
+        if exec_result.exit_code != 0:
+            self.logger.error(f"  -> 应用TC规则失败 (退出码: {exec_result.exit_code}): {exec_result.output.decode().strip()}")
+        else:
+            self.logger.info(f"  -> TC规则应用成功。")
 
     def _connect_container_to_network(self, container, network, interface: Interface):
         """将容器连接到指定的网络并配置IP。"""

@@ -53,13 +53,18 @@ class Interface:
         self.link = link
 
 class Link:
-    """网络连接（链路）的抽象表示，通常对应一个子网。"""
+    """网络链路的抽象表示，连接多个接口。"""
 
     def __init__(self, name: str, subnet: IPv4Network, **kwargs):
         self.name = name
         self.subnet = subnet
         self.interfaces: list[Interface] = []  # 连接到此链路的接口列表
-        self.attributes = kwargs  # 存储链路的其他属性，如延迟、丢包率等
+
+        # Traffic Control (TC) parameters
+        self.delay: str | None = kwargs.get('delay')
+        self.loss: float | None = kwargs.get('loss')
+        self.bandwidth: int | None = kwargs.get('bandwidth')  # in kbit/s
+        self.attributes = kwargs  # 存储链路的其他属性
 
     def attach(self, interface: Interface):
         """将一个接口连接到此链路上。"""
