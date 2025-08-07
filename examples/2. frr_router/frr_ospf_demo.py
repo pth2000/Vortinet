@@ -1,6 +1,10 @@
-"""
-此示例文件演示了如何使用 FrrOspfNode 创建一个动态路由网络。
-"""
+import sys
+from pathlib import Path
+
+# 将项目根目录添加到Python的模块搜索路径中
+project_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(project_root))
+
 from core.topology import Topology
 from core.simulation_runner import SimulationRunner
 from core.node_types import FrrOspfNode

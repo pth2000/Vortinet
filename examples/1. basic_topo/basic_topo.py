@@ -8,6 +8,7 @@ sys.path.insert(0, str(project_root))
 from core.topology import Topology
 from core.simulation_runner import SimulationRunner
 
+
 def main():
     """主函数，演示如何使用新的 SimulationRunner 运行仿真。"""
 

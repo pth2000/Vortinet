@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+# 将项目根目录添加到Python的模块搜索路径中
+project_root = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(project_root))
+
 from core.topology import Topology
 from core.simulation_runner import SimulationRunner
 
@@ -31,4 +38,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
