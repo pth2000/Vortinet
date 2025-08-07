@@ -157,12 +157,11 @@ class Topology:
         """
         使用 rich 在终端上以“仪表盘”风格进行格式化打印。
         """
-        from rich.console import Console, Group
+        from rich.console import Console
         from rich.panel import Panel
         from rich.table import Table
         from rich.tree import Tree
         from rich.layout import Layout
-        from rich.columns import Columns
         from rich.box import ROUNDED
         console = Console(width=120)
 

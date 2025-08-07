@@ -35,8 +35,6 @@ Vortinet 是一个基于 Python 和 Docker 的轻量级网络仿真平台。它�
 │   ├── vortinet_base/      # 基础镜像，提供基本网络工具
 │   └── vortinet_frr/       # FRR镜像，用于路由实验
 ├── examples/             # 示例代码
-│   ├── 1. basic_topo/      # 基础拓扑示例
-│   └── 2. frr_router/      # FRR OSPF路由示例
 ├── README.md             # 本文档
 └── ...
 ```
@@ -52,39 +50,24 @@ Vortinet 是一个基于 Python 和 Docker 的轻量级网络仿真平台。它�
 
 以下示例将创建一个包含一个路由器（R1）和两个主机（H1, H2）的网络，并将主机连接到路由器。
 
-1.  **创建示例文件**
+1. 初始化Python
 
-    在 `examples/1. basic_topo/basic_topo.py` 中，代码如下：
-
-    ```python
-    from core.topology import Topology
-    from core.simulation_runner import SimulationRunner
-
-    def main():
-        """主函数，演示如何使用 SimulationRunner 运行仿真。"""
-
-        # 1. 创建拓扑
-        topo = Topology()
-
-        # 添加节点，可以指定节点类型
-        topo.add_node("R1", node_type="router")
-        topo.add_node("H1", node_type="client")
-        topo.add_node("H2", node_type="client")
-
-        # 添加链路，连接节点
-        topo.add_link("H1", "R1")
-        topo.add_link("H2", "R1")
-
-        # 打印拓扑结构到控制台
-        topo.display()
-
-        # 2. 创建并运行仿真
-        # SimulationRunner 会处理所有繁琐的流程
-        runner = SimulationRunner(topo)
-        runner.run()
-
-    if __name__ == "__main__":
-        main()
+    进入项目根目录，创建Python3虚拟环境：
+    
+    ```bash
+    python3 -m venv venv
+    ```
+    
+    激活虚拟环境：
+    
+    ```bash
+    source venv/bin/activate
+    ```
+    
+    安装依赖：
+    
+    ```bash
+    pip install -r requirements.txt
     ```
 
 2.  **运行仿真**

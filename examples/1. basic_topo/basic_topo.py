@@ -24,6 +24,10 @@ def main():
     topo.add_link("H1", "R1")
     topo.add_link("H2", "R1")
 
+    # 为客户端节点设置默认网关
+    topo.set_default_gateway("H1", "R1")
+    topo.set_default_gateway("H2", "R1")
+
     # 打印拓扑结构
     topo.display()
 
