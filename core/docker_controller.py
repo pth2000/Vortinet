@@ -56,13 +56,13 @@ class DockerController:
         try:
             # path: 构建上下文的路径
             # dockerfile: 相对于构建上下文的Dockerfile路径
-            self.logger.info(f"  [BUILD] Context: {Path(build_context_path).resolve()}")
+            self.logger.info(f"  [BUILD] Context: {Path(__file__).parent.parent / build_context_path}")
             self.logger.info(f"  [BUILD] Dockerfile: {dockerfile_rel_path}")
 
             # 为build操作增加超时设置，防止无限期挂起
             api_client = docker.APIClient()
             build_log_generator = api_client.build(
-                path=build_context_path,
+                path=str(Path(__file__).parent.parent / build_context_path),
                 dockerfile=dockerfile_rel_path,
                 tag=image_tag,
                 rm=True,
